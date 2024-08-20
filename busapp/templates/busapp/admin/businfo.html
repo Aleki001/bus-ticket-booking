@@ -1,0 +1,63 @@
+{% extends "busapp/base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mb-5">
+    {% if user.is_staff %}
+    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% else %}
+    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% endif %}
+    <h2 class="text-center">Bus Information</h2>
+    <div class="row">
+        <!-- Form Section (1/4 width) -->
+        <div class="col-md-3">
+            <div class="card card-body bg-light">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Add Bus</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table Section (3/4 width) -->
+        <div class="col-md-9">
+            <div class="table-responsive bg-white" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Number Plate</th>
+                            <th scope="col">Available Seats</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Route</th>
+                            <th scope="col">Travel Date</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bus in buses %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ bus.number_plate }}</td>
+                            <td>{{ bus.available_seats }}</td>
+                            <td>{{ bus.status }}</td>
+                            <td>{{ bus.route }}</td>
+                            <td>{{ bus.travel_date }}</td>
+                            <td>
+                                <a href="{% url 'edit_bus' bus.id %}" class="action-icons edit-icon">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'delete_bus' bus.id %}" class="action-icons delete-icon">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

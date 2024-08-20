@@ -1,0 +1,46 @@
+{% extends "busapp/base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mb-5">
+    {% if user.is_staff %}
+    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% else %}
+    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% endif %}
+    <h2 class="text-center">Booking Information</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="table-responsive bg-white" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Bus</th>
+                            <th scope="col">Customer Name</th>
+                            <th scope="col">Customer Email</th>
+                            <th scope="col">Customer Phone</th>
+                            <th scope="col">Customer Id No</th>
+                            <th scope="col">Booking Date</th>
+                            <th scope="col">Travel Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ booking.bus }}</td>
+                            <td>{{ booking.customer_name }}</td>
+                            <td>{{ booking.customer_email }}</td>
+                            <td>{{ booking.customer_phone }}</td>
+                            <td>{{ booking.customer_id_number }}</td>
+                            <td>{{ booking.booking_date}}</td>
+                            <td>{{ booking.bus.travel_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

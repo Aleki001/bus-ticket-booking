@@ -1,0 +1,14 @@
+{% extends "busapp/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'index' %}"><i class="fas fa-arrow-left"></i></a>
+    <h2>Enter Your Information</h2>
+    <form method="post" class="col-md-8">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Complete Booking</button>
+    </form>
+</div>
+{% endblock %}

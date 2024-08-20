@@ -1,0 +1,32 @@
+{% extends "busapp/base.html" %}
+{% load static %}
+{% block content%}
+    <div class="container">
+        <div class="card col-md-8">
+            <div class="card-header bg-success text-white">
+                <h4>Confirm your Booking details</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <div class="d-flex">
+                        <div class="col-md-6">
+                            <li class="list-group-item"><strong>Customer Name:</strong> {{ booking.customer_name }}</li>
+                            <li class="list-group-item"><strong>Email:</strong> {{ booking.customer_email }}</li>
+                            <li class="list-group-item"><strong>Phone:</strong> {{ booking.customer_phone }}</li>
+                            <li class="list-group-item"><strong>ID Number:</strong> {{ booking.customer_id_number }}</li>
+                        </div>
+                        <div class="col-md-6">
+                            <li class="list-group-item"><strong>Bus Number Plate:</strong> {{ booking.bus.number_plate }}</li>
+                            <li class="list-group-item"><strong>Route:</strong> {{ booking.bus.route }}</li>
+                            <li class="list-group-item"><strong>Price:</strong> Ksh. {{ booking.bus.route.price }}.00</li>
+                        </div>
+                    </div>
+                    <li class="list-group-item mt-3"><strong>Travel Date:</strong> {{ booking.bus.travel_date }}</li>
+                    <li class="list-group-item"><strong>Booking Date:</strong> {{ booking.booking_date }}</li>
+                </ul>
+                <a href="{% url 'confirm_payment' %}" class="btn btn-secondary mt-3">Proceed to Payment</a>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

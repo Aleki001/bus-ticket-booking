@@ -1,0 +1,24 @@
+{% extends "busapp/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container mt-3 card p-5" style="max-width: 500px;" >
+    <form method="post">
+        {% csrf_token %}
+        <h3 class="">Sign up Today</h3>
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+        <div class="row g-3">
+            {{form|crispy}}
+            
+            <div class="col-12">
+                <button class="btn btn-secondary rounded-pill" type="submit">Register</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

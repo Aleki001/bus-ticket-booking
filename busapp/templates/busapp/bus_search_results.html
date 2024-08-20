@@ -1,0 +1,62 @@
+{% extends "busapp/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<section class="available-buses-section">
+    <div class="container">
+        <a class="btn btn-primary rounded-circle mb-3" href="{% url 'index' %}"><i class="fas fa-arrow-left"></i></a>
+        <h2 class="text-center mb-4">Buses on Route({{ route }}) date {{ travel_date }}</h2>
+        <div class="row">
+            {% if buses %}
+            {% for bus in buses %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-light h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fa fa-bus-alt fa-2x mr-3 text-primary"></i>
+                            <h5 class="card-title mb-0">{{ bus.number_plate }}</h5>
+                        </div>
+                        <div class="d-flex">
+                            <p class="card-text mr-5"><strong>Available Seats:</strong> {{ bus.available_seats }}</p>
+                            <p class="card-text"><strong>Price:</strong> Ksh {{route.price}}.00</p>
+                        </div>
+                        
+                        <p class="card-text"><strong>Status:</strong> 
+                            <span class="badge 
+                            {% if bus.status == 'AVAILABLE' %}
+                                badge-success
+                            {% elif bus.status == 'BOOKED' %}
+                                badge-danger
+                            {% else %}
+                                badge-secondary
+                            {% endif %}
+                            ">{{ bus.status }}</span>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <form action="" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="bus_id" value="{{ bus.id }}">
+                            <button class="btn btn-primary btn-block {% if bus.available_seats == 0 %}disabled{% endif %}" type="submit">
+                                {% if bus.available_seats == 0 %}
+                                    Sold Out
+                                {% else %}
+                                    Book Now
+                                {% endif %}
+                            </button>
+                        </form>
+                        
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+            {% else %}
+            <div class="col-12">
+                <p class="text-center text-muted">No buses available for the selected route and travel date.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

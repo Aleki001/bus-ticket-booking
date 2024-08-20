@@ -1,0 +1,137 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #F5F5DC;
+}
+
+.hero-section {
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 150px 0;
+    text-align: center;
+    background-image: url('/static/images/busapp_bg.webp');
+}
+
+.hero-section h1 {
+    font-size: 3.5em;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.hero-section p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+}
+
+.navbar {
+    background-color: #f79e31;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.features-section {
+    position: relative;
+    padding: 50px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* background-size: cover; */
+    /* background-position: center; */
+    overflow: hidden; /* Ensure content doesn't overflow the border-radius */
+}
+
+.features-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/static/images/feature_bg.avif');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.5; /* Adjust the opacity here */
+    z-index: 1;
+}
+
+.features-section * {
+    position: relative;
+    z-index: 2;
+}
+
+
+.feature-card {
+    border: none;
+    transition: transform 0.3s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+}
+
+.feature-card img {
+    border-radius: 10px;
+    height: 200px;
+    object-fit: cover;
+}
+
+.feature-card .card-body {
+    text-align: center;
+    padding: 20px;
+}
+
+.feature-card .card-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+.bus-search-section {
+    background-color:#F5F5DC;
+    padding: 50px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn {
+    background-color: #ff8c00 !important; /* Orange color */
+    border-color: #ff8c00 !important;
+    color: white !important;
+}
+
+.btn:hover {
+    background-color: #e67e22 !important; /* Darker orange on hover */
+    border-color: #e67e22 !important;
+}
+
+.content {
+    flex: 1; /* This makes the content area take up any remaining space */
+    padding: 20px;
+}
+
+.footer {
+    background-color: #212529;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    flex-shrink: 0; /* Ensures the footer does not shrink below its content size */
+}
