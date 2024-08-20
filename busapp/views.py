@@ -321,6 +321,12 @@ def all_bookings(request):
     return render(request, "busapp/admin/bookings.html", {'bookings':bookings})
 
 
+@login_required
+def user_bookings(request):
+    bookings = Booking.objects.filter(customer_email=request.user.email)
+    return render(request, "busapp/user/user_bookings.html", {'bookings': bookings})
+
+
 
 
 def register_user(request):

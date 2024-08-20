@@ -11,6 +11,7 @@ urlpatterns = [
     path('daraja/stk_push', views.stk_push_callback, name="stk_push_callback"),
     path('booking/pay', views.pay, name="confirm_payment"),
     path('bookings', views.all_bookings, name="bookings"),
+    path('user-bookings', views.user_bookings, name="user_bookings"),
     # routes urls
     path('routes', views.routes, name="routes"),
     path('routes/delete/<int:pk>/', views.delete_route, name="delete_route"),
