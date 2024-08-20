@@ -280,6 +280,9 @@ def user_account(request):
             if profile_pic:
                 profile.profile_pic = profile_pic
                 profile.save()
+            phone = form.cleaned_data.get('phone')
+            if phone:
+                profile.phone_no = phone
             form.save()
             messages.success(request, 'Your profile was successfully updated!')
             return redirect('user_account')

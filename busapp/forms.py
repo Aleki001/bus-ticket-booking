@@ -57,14 +57,30 @@ class BusForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['username', 'first_name', 'last_name', 'email', 'profile_pic']
+        fields = ['username', 'first_name', 'last_name', 'email', 'profile_pic', 'phone_no']
 
 
 class CustomUserChangeForm(UserChangeForm):
     profile_pic = forms.ImageField(required=False)
+    phone_no = forms.CharField(required=False) 
     class Meta:
         model = CustomUser
-        fields = ['username', 'first_name', 'last_name', 'email', 'profile_pic']
+        fields = ['username', 'first_name', 'last_name', 'email', 'profile_pic', 'phone_no']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['phone_no'].initial = self.instance.userprofile.phone_no
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            user.userprofile.phone_no = self.cleaned_data['phone_no']
+            user.userprofile.save()
+        return user
+
+
+
 
 
 class UserRegisterForm(UserCreationForm):
