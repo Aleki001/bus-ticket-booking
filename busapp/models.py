@@ -48,6 +48,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_pic = models.ImageField(upload_to='profile_pics', blank=True, null=True)
     phone_no = models.CharField(max_length=15, blank=True, null=True)
+    id_number = models.CharField(max_length=15, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
@@ -61,6 +62,7 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
 class CustomUser(AbstractUser):
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     phone_no = models.CharField(max_length=15, blank=True, null=True)
+    id_number = models.CharField(max_length=15, blank=True, null=True)
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',  # Change the related_name to avoid conflict

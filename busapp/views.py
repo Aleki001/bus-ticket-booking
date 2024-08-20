@@ -14,6 +14,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
+from django.db import IntegrityError
+
 
 
 def bus_search(request):
@@ -60,18 +62,29 @@ def index(request):
     return render(request, 'busapp/index.html', {'form': form})
 
 
-
 def customer_info(request):
+    user = request.user
+
+    if user.is_authenticated:
+        # Get data from the user's profile
+        profile = user.userprofile
+        customer_data = {
+            'full_name': user.get_full_name(),
+            'email': user.email,
+            'phone_number': profile.phone_no,
+            'id_number': profile.id_number  # Assuming you have an id_number field in the profile
+        }
+        return create_booking(request, customer_data)
+    
+    # If the user is not authenticated or their profile lacks necessary info, show the form
     if request.method == 'POST':
         form = CustomerInfoForm(request.POST)
         if form.is_valid():
-            
             return create_booking(request, form.cleaned_data)
     else:
         form = CustomerInfoForm()
+
     return render(request, 'busapp/booking/customer_info.html', {'form': form})
-
-
 
 
 @transaction.atomic
@@ -84,24 +97,28 @@ def create_booking(request, customer_data):
     bus = get_object_or_404(Bus, id=bus_id)
     
     if bus.available_seats <= 0:
-        
+        messages.error(request, 'Sorry, the bus is fully booked.')
         return redirect('route_selection')
     
-    booking = Booking.objects.create(
-        bus=bus,
-        customer_name=customer_data['full_name'],
-        customer_email=customer_data['email'],
-        customer_phone=customer_data['phone_number'],
-        customer_id_number=customer_data['id_number']
-    )
+    try:
+        booking = Booking.objects.create(
+            bus=bus,
+            customer_name=customer_data.get('full_name'),
+            customer_email=customer_data.get('email'),
+            customer_phone=customer_data.get('phone_number'),
+            customer_id_number=customer_data.get('id_number')
+        )
 
-    # add price in a session for payment purposes
-    request.session['price'] = bus.route.price
-    request.session['phone_no'] = customer_data['phone_number']
+        # Add price in a session for payment purposes
+        request.session['price'] = bus.route.price
+        request.session['phone_no'] = customer_data.get('phone_number')
+        
+        return redirect('booking_confirmation', booking_id=booking.id)
     
-    return redirect('booking_confirmation', booking_id=booking.id)
-
-
+    except IntegrityError as e:
+        messages.error(request, 'Please complete your profile with all required information.')
+        return redirect('user_account')  
+    
 
 def booking_confirmation(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -280,9 +297,6 @@ def user_account(request):
             if profile_pic:
                 profile.profile_pic = profile_pic
                 profile.save()
-            phone = form.cleaned_data.get('phone')
-            if phone:
-                profile.phone_no = phone
             form.save()
             messages.success(request, 'Your profile was successfully updated!')
             return redirect('user_account')
