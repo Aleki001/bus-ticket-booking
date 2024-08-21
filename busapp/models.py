@@ -28,6 +28,7 @@ class Bus(models.Model):
     
 class Booking(models.Model):
     bus = models.ForeignKey(Bus, on_delete=models.CASCADE)
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, default=True)
     customer_name = models.CharField(max_length=100, default="user")
     customer_email = models.EmailField(null=True)
     customer_phone = models.CharField(max_length=10, default=0)

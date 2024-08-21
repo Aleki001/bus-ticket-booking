@@ -21,6 +21,7 @@ def bus_search(request):
 
     # Get the Route object using the route_id
     route = get_object_or_404(Route, id=route_id)
+    request.session['route_id'] = route_id
 
     # Filter buses by route and travel date
     buses = Bus.objects.filter(route=route, travel_date=travel_date, status="AVAILABLE")
@@ -90,6 +91,9 @@ def create_booking(request, customer_data):
     if not bus_id:
         messages.error(request, 'Bus selection is missing. Please select a bus first.')
         return redirect('index')
+    
+    route_id = request.session.get('route_id')
+    route = get_object_or_404(Route, id=route_id)
 
     bus = get_object_or_404(Bus, id=bus_id)
     
@@ -100,6 +104,7 @@ def create_booking(request, customer_data):
     try:
         booking = Booking.objects.create(
             bus=bus,
+            route=route,
             customer_name=customer_data.get('full_name'),
             customer_email=customer_data.get('email'),
             customer_phone=customer_data.get('phone_number'),
