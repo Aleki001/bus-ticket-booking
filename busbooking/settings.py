@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'busapp',
+    'user',
+
     'crispy_forms',
     'crispy_bootstrap4',
     'django_daraja',

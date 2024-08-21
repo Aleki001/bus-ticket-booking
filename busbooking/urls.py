@@ -25,7 +25,8 @@ from .settings import DEBUG
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('', include('busapp.urls'))
+    path('', include('busapp.urls')),
+    path('', include('user.urls')),
 ]
 
 

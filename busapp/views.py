@@ -1,18 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
-from .models import Bus, Booking, Route, UserProfile
-from .forms import CustomerInfoForm, BusSearchForm, RoutesForm, BusForm, CustomUserChangeForm, UserRegisterForm
+from .models import Bus, Booking, Route
+from .forms import CustomerInfoForm, BusSearchForm, RoutesForm, BusForm
 from django.urls import reverse
 from urllib.parse import urlencode
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django_daraja.mpesa.core import MpesaClient
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
 
 from django.db import IntegrityError
 
@@ -72,7 +69,7 @@ def customer_info(request):
             'full_name': user.get_full_name(),
             'email': user.email,
             'phone_number': profile.phone_no,
-            'id_number': profile.id_number  # Assuming you have an id_number field in the profile
+            'id_number': profile.id_number  
         }
         return create_booking(request, customer_data)
     
@@ -236,84 +233,6 @@ def delete_bus(request, pk):
     return redirect('list_buses')
 
 
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            if user.is_staff:
-                login(request, user)
-                print(user.is_staff)
-                return redirect('admin_account')
-            else:
-                login(request, user)
-                return redirect('user_account')
-        else:
-            return render(request, 'busapp/auth/login.html', {'error': 'Invalid credentials!! Try again.'})
-    else:
-        return render(request, 'busapp/auth/login.html')
-    
-
-@login_required
-def admin_account(request):
-    user = request.user
-    try:
-        profile = user.userprofile
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=user)
-
-    if request.method == 'POST':
-        form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            profile_pic = form.cleaned_data.get('profile_pic')
-            if profile_pic:
-                profile.profile_pic = profile_pic
-                profile.save()
-            form.save()
-            messages.success(request, 'Your profile was successfully updated!')
-            return redirect('admin_account')
-        else:
-            messages.error(request, 'Please correct the error below.')
-    else:
-        form = CustomUserChangeForm(instance=user)
-    
-    return render(request, 'busapp/admin/account.html', {'form': form, 'profile': profile})
-
-
-@login_required
-def user_account(request):
-    user = request.user
-    try:
-        profile = user.userprofile
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=user)
-
-    if request.method == 'POST':
-        form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            profile_pic = form.cleaned_data.get('profile_pic')
-            if profile_pic:
-                profile.profile_pic = profile_pic
-                profile.save()
-            form.save()
-            messages.success(request, 'Your profile was successfully updated!')
-            return redirect('user_account')
-        else:
-            messages.error(request, 'Please correct the error below.')
-    else:
-        form = CustomUserChangeForm(instance=user)
-    
-    return render(request, 'busapp/user/account.html', {'form': form, 'profile': profile})
-
-
-
-@login_required
-def custom_logout(request):
-    logout(request)
-    return redirect("login")
-
 
 @login_required
 def all_bookings(request):
@@ -325,47 +244,3 @@ def all_bookings(request):
 def user_bookings(request):
     bookings = Booking.objects.filter(customer_email=request.user.email)
     return render(request, "busapp/user/user_bookings.html", {'bookings': bookings})
-
-
-
-
-def register_user(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your account has been created. You can now log in.')
-            return redirect('login')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'busapp/auth/register.html', {'form':form})
-
-
-@login_required
-def user_change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            # Updating the session with the new password hash
-            update_session_auth_hash(request, user)
-            messages.success(request, 'Your password was successfully updated!')
-            return redirect('user_account')
-    else:
-        form = PasswordChangeForm(request.user)
-    return render(request, 'busapp/admin/account.html', {'form': form})
-
-
-@login_required
-def admin_change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            # Updating the session with the new password hash
-            update_session_auth_hash(request, user)
-            messages.success(request, 'Your password was successfully updated!')
-            return redirect('admin_account')
-    else:
-        form = PasswordChangeForm(request.user)
-    return render(request, 'busapp/admin/account.html', {'form': form})
