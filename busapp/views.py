@@ -241,11 +241,37 @@ def delete_bus(request, pk):
 
 @login_required
 def all_bookings(request):
+    # Get all bookings 
     bookings = Booking.objects.all()
-    return render(request, "busapp/admin/bookings.html", {'bookings':bookings})
+    # Get popular routes
+    popular_routes = Booking.objects.values('route__starting_point', 'route__destination').annotate(count=Count('id')).order_by('-count')
+
+    # Get peak hours
+    peak_hours = Booking.objects.annotate(hour=ExtractHour('booking_date')).values('hour').annotate(count=Count('id')).order_by('-count')
+
+    # Get peak days
+    peak_days = Booking.objects.annotate(day=ExtractWeekDay('booking_date')).values('day').annotate(count=Count('id')).order_by('-count')
+
+    # Get peak months
+    peak_months = Booking.objects.annotate(month=ExtractMonth('booking_date')).values('month').annotate(count=Count('id')).order_by('-count')
+
+    context = {
+        'popular_routes': list(popular_routes),
+        'peak_hours': list(peak_hours),
+        'peak_days': list(peak_days),
+        'peak_months': list(peak_months),
+        'bookings': bookings
+    }
+    return render(request, "busapp/admin/bookings.html",  context)
 
 
 @login_required
 def user_bookings(request):
     bookings = Booking.objects.filter(customer_email=request.user.email)
     return render(request, "busapp/user/user_bookings.html", {'bookings': bookings})
+
+
+
+from django.db.models import Count
+from django.db.models.functions import ExtractHour, ExtractWeekDay, ExtractMonth
+

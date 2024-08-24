@@ -1,12 +1,21 @@
 {% extends "busapp/base.html" %}
 {% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<style>
+    .back-button {
+        float: left;
+    }
+</style>
+{% endblock %}
 {% block content %}
-<div class="container mb-5">
-    {% if user.is_staff %}
-    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
+{% if user.is_staff %}
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
     {% else %}
-    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
     {% endif %}
+<div class="container mb-5">
+    
     <h2 class="text-center">Route Information</h2>
     <div class="row">
         <!-- Form Section (1/4 width) -->
@@ -22,8 +31,8 @@
 
         <!-- Table Section (3/4 width) -->
         <div class="col-md-9">
-            <div class="table-responsive bg-white" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-bordered table-sm table-hover">
+            <div class="table-responsive bg-white p-3">
+                <table class="table table-bordered table-sm table-hover" id="routestable">
                     <thead>
                         <tr>
                             <th scope="col">#</th>
@@ -56,4 +65,27 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    console.log("Table exists:", $('#routestable').length > 0);
+    if ($('#routestable').length > 0) {
+        try {
+            var table = $('#routestable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true
+            });
+            console.log("DataTable initialized:", table instanceof $.fn.dataTable.Api);
+        } catch (error) {
+            console.error("Error initializing DataTable:", error);
+        }
+    } else {
+        console.error("Table #routestable not found in the DOM");
+    }
+});
+</script>
 {% endblock %}

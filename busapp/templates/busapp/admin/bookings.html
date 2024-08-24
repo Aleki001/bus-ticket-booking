@@ -1,48 +1,284 @@
 {% extends "busapp/base.html" %}
-{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
+<style>
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .chart-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 20px;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .chart-box {
+        flex: 1 1 22%;
+        background-color: white;
+        padding: 10px;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    canvas {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    h2 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+        color: #555;
+    }
+    .back-button {
+        float: left;
+    }
+</style>
+{% endblock %}
 {% block content %}
-<div class="container mb-5">
-    {% if user.is_staff %}
-    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
+{% if user.is_staff %}
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
     {% else %}
-    <a class="btn btn-primary rounded-circle mb-3" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
     {% endif %}
-    <h2 class="text-center">Booking Information</h2>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="table-responsive bg-white" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-bordered table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Bus</th>
-                            <th scope="col">Customer Name</th>
-                            <th scope="col">Customer Phone</th>
-                            <th scope="col">Customer Id No</th>
-                            <th scope="col">Route</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Booking Date</th>
-                            <th scope="col">Travel Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in bookings %}
-                        <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
-                            <td>{{ booking.bus }}</td>
-                            <td>{{ booking.customer_name }}</td>
-                            <td>{{ booking.customer_phone }}</td>
-                            <td>{{ booking.customer_id_number }}</td>
-                            <td>{{ booking.route }}</td>
-                            <td>{{ booking.route.price }}</td>
-                            <td>{{ booking.booking_date}}</td>
-                            <td>{{ booking.bus.travel_date }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<div class="container mb-5">
+    <h2 class="text-center my-3">Booking Trends</h2>
+    <div class="chart-container container">
+        <div class="chart-box">
+            <h2>Popular Routes</h2>
+            <canvas id="popularRoutesChart"></canvas>
         </div>
+
+        <div class="chart-box">
+            <h2>Peak Hours</h2>
+            <canvas id="peakHoursChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h2>Peak Days</h2>
+            <canvas id="peakDaysChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h2>Peak Months</h2>
+            <canvas id="peakMonthsChart"></canvas>
+        </div>
+    </div>
+
+
+
+    <h2 class="text-center my-3">Booking Information</h2>
+    <div class="table-responsive bg-white p-3" >
+        <table id="bookingsTable" class="table table-bordered table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Bus</th>
+                    <th>Customer Name</th>
+                    <th>Customer Phone</th>
+                    <th>Customer Id No</th>
+                    <th>Route</th>
+                    <th>Price</th>
+                    <th>Booking Date</th>
+                    <th>Travel Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ booking.bus }}</td>
+                    <td>{{ booking.customer_name }}</td>
+                    <td>{{ booking.customer_phone }}</td>
+                    <td>{{ booking.customer_id_number }}</td>
+                    <td>{{ booking.route }}</td>
+                    <td>{{ booking.route.price }}</td>
+                    <td>{{ booking.booking_date }}</td>
+                    <td>{{ booking.bus.travel_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    console.log("Table exists:", $('#bookingsTable').length > 0);
+    if ($('#bookingsTable').length > 0) {
+        try {
+            var table = $('#bookingsTable').DataTable({
+                "paging": true,
+                "searching": true,
+                "ordering": true,
+                "info": true
+            });
+            console.log("DataTable initialized:", table instanceof $.fn.dataTable.Api);
+        } catch (error) {
+            console.error("Error initializing DataTable:", error);
+        }
+    } else {
+        console.error("Table #bookingsTable not found in the DOM");
+    }
+});
+</script>
+
+<script>
+    // Mapping functions for days and months
+    function getDayName(day) {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days[day - 1];
+    }
+
+    function getMonthName(month) {
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return months[month - 1];
+    }
+
+    function extractData(data, key, transformFunc = null) {
+        return data.map(item => transformFunc ? transformFunc(item[key]) : item[key]);
+    }
+
+    // Chart configurations
+    const chartConfig = {
+        type: 'bar',
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: ''
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Number of Bookings'
+                    },
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 5
+                }
+            }
+        }
+    };
+
+    // Popular Routes
+    const popularRoutesCtx = document.getElementById('popularRoutesChart').getContext('2d');
+    const popularRoutesData = {{ popular_routes|safe }};
+    new Chart(popularRoutesCtx, {
+        ...chartConfig,
+        data: {
+            labels: extractData(popularRoutesData, 'route__starting_point'),
+            datasets: [{
+                label: 'Bookings',
+                data: extractData(popularRoutesData, 'count'),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartConfig.options,
+            scales: {
+                x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Routes' }},
+                y: chartConfig.options.scales.y
+            }
+        }
+    });
+
+    // Peak Hours
+    const peakHoursCtx = document.getElementById('peakHoursChart').getContext('2d');
+    const peakHoursData = {{ peak_hours|safe }};
+    new Chart(peakHoursCtx, {
+        ...chartConfig,
+        data: {
+            labels: extractData(peakHoursData, 'hour'),
+            datasets: [{
+                label: 'Bookings',
+                data: extractData(peakHoursData, 'count'),
+                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartConfig.options,
+            scales: {
+                x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Hour of the Day' }},
+                y: chartConfig.options.scales.y
+            }
+        }
+    });
+
+    // Peak Days
+    const peakDaysCtx = document.getElementById('peakDaysChart').getContext('2d');
+    const peakDaysData = {{ peak_days|safe }};
+    new Chart(peakDaysCtx, {
+        ...chartConfig,
+        data: {
+            labels: extractData(peakDaysData, 'day', getDayName),
+            datasets: [{
+                label: 'Bookings',
+                data: extractData(peakDaysData, 'count'),
+                backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartConfig.options,
+            scales: {
+                x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Day of the Week' }},
+                y: chartConfig.options.scales.y
+            }
+        }
+    });
+
+    // Peak Months
+    const peakMonthsCtx = document.getElementById('peakMonthsChart').getContext('2d');
+    const peakMonthsData = {{ peak_months|safe }};
+    new Chart(peakMonthsCtx, {
+        ...chartConfig,
+        data: {
+            labels: extractData(peakMonthsData, 'month', getMonthName),
+            datasets: [{
+                label: 'Bookings',
+                data: extractData(peakMonthsData, 'count'),
+                backgroundColor: 'rgba(255, 206, 86, 0.6)',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            ...chartConfig.options,
+            scales: {
+                x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Month' }},
+                y: chartConfig.options.scales.y
+            }
+        }
+    });
+</script>
+{% endblock%}
