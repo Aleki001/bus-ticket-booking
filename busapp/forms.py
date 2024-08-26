@@ -38,6 +38,7 @@ class BusForm(forms.ModelForm):
     STATUS_CHOICES = [
         ('AVAILABLE', 'AVAILABLE'),
         ('BOOKED', 'BOOKED'),
+        ('IN MAINTENANCE', 'IN MAINTENANCE')
     ]
 
     status = forms.ChoiceField(choices=STATUS_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))

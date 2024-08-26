@@ -1,0 +1,97 @@
+{% extends "busapp/base.html" %}
+{% load static %}
+{% block extra_css %}
+<style>
+    .back-button {
+        float: left;
+    }
+</style>
+{% endblock %}
+{% block content %}
+{% if user.is_staff %}
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'admin_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% else %}
+    <a class="btn btn-primary rounded-circle mb-3 back-button" href="{% url 'user_account' %}"><i class="fas fa-arrow-left"></i></a>
+    {% endif %}
+<div class="container mb-5">
+    {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the errors below:</strong>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+      <div class="">
+        <div class="d-inline m-3 p-2">
+            <h3 class="d-inline">{{ user.username }}'s Profile</h3>
+            <div class="text-dark mt-1 d-inline" style="float: right;">Joined on: {{ user.date_joined }}</div>
+        </div>
+
+        <form method="post" action="{% url 'admin_account' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="card-body media align-items-center">
+                {% if profile.profile_pic %}
+                    <img src="{{ profile.profile_pic.url }}" alt="" class="d-block ui-w-80">
+                {% else %}
+                    <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="" class="d-block ui-w-80">
+                {% endif %}
+                <div class="media-body ml-4">
+                    <label class="btn btn-outline-primary mt-2">
+                        Upload new photo
+                        <input type="file" name="profile_pic" class="account-settings-fileinput">
+                    </label> &nbsp;
+                    <div class="text-dark small mt-1">Allowed JPG, GIF or PNG. Max size of 800K</div>
+                </div>
+            </div>
+            
+            <hr class="border-light m-0">
+            
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control mb-1" value="{{ user.username }}" name="username" required>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-2 col-form-label">First Name</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                    </div>
+                    <label class="col-sm-2 col-form-label">Last Name</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
+                    </div>
+                </div>
+                
+                <div class="form-group row">
+                  <label class="col-sm-2 col-form-label">Email</label>
+                  <div class="col-sm-4">
+                      <input type="text" class="form-control" name="email" value="{{ user.email }}">
+                  </div>
+                  <label class="col-sm-2 col-form-label">Phone No</label>
+                  <div class="col-sm-4">
+                      <input type="text" class="form-control" name="phone_no" value="{{ profile.phone_no }}">
+                  </div>
+                  
+                
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label">Id Number</label>
+              <div class="col-sm-4">
+                  <input type="text" class="form-control" name="id_number" value="{{ profile.id_number }}">
+              </div>
+          </div>
+
+            <div class="text-right mt-3">
+              <button type="submit" class="btn btn-primary">Save changes</button>&nbsp;
+              </div>
+          </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

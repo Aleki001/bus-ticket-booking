@@ -6,6 +6,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from busapp.models import Booking, Bus
+from django.contrib.auth.models import User
+from django.db.models.functions import TruncWeek
+from django.db import models
 
 
 
@@ -60,9 +64,11 @@ def user_change_password(request):
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
             return redirect('user_account')
+        else:
+            return render(request, 'busapp/user/change_password.html', {'form': form})
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'busapp/admin/account.html', {'form': form})
+    return render(request, 'busapp/user/change_password.html', {'form': form})
 
 
 @login_required
@@ -75,15 +81,15 @@ def admin_change_password(request):
             update_session_auth_hash(request, user)
             messages.success(request, 'Your password was successfully updated!')
             return redirect('admin_account')
+        else:
+            return render(request, 'busapp/admin/change_password.html', {'form': form})
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'busapp/admin/account.html', {'form': form})
-
-
+    return render(request, 'busapp/admin/change_password.html', {'form': form})
 
 
 @login_required
-def admin_account(request):
+def admin_profile(request):
     user = request.user
     try:
         profile = user.userprofile
@@ -105,7 +111,8 @@ def admin_account(request):
     else:
         form = CustomUserChangeForm(instance=user)
     
-    return render(request, 'busapp/admin/account.html', {'form': form, 'profile': profile})
+    return render(request, 'busapp/admin/admin_profile.html', {'form': form, 'profile': profile})
+
 
 
 @login_required
@@ -133,3 +140,40 @@ def user_account(request):
     
     return render(request, 'busapp/user/account.html', {'form': form, 'profile': profile})
 
+
+@login_required
+def admin_account(request):
+    recent_bookings = Booking.objects.order_by('-booking_date')[:5]
+    total_bookings = Booking.objects.all().count()
+    total_users = User.objects.all().count()
+
+    # Data for Bookings Over Time (Weekly Line Chart)
+    bookings_over_time = (
+        Booking.objects.annotate(week=TruncWeek('booking_date'))
+        .values('week')
+        .annotate(count=models.Count('id'))
+        .order_by('week')
+    )
+    weeks = [booking['week'].strftime("%U %Y") for booking in bookings_over_time]
+    booking_counts = [booking['count'] for booking in bookings_over_time]
+
+    # Data for Buses Overview (Pie Chart)
+    bus_statuses = Bus.objects.values('status').annotate(count=models.Count('id'))
+    status_labels = [bus['status'] for bus in bus_statuses]
+    status_counts = [bus['count'] for bus in bus_statuses]
+
+    # Pie chart colors
+    pie_colors = ["#4caf50", "#ff9800", "#f44336"]  # Green, Orange, Red for better distinction
+
+    context = {
+        'bookings': recent_bookings,
+        'total_bookings': total_bookings,
+        'total_users': total_users,
+        'weeks': weeks,
+        'booking_counts': booking_counts,
+        'status_labels': status_labels,
+        'status_counts': status_counts,
+        'pie_colors': pie_colors,
+    }
+    
+    return render(request, 'busapp/admin/account.html', context)
