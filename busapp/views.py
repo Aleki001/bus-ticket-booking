@@ -246,9 +246,6 @@ def all_bookings(request):
     # Get popular routes
     popular_routes = Booking.objects.values('route__starting_point', 'route__destination').annotate(count=Count('id')).order_by('-count')
 
-    # Get peak hours
-    peak_hours = Booking.objects.annotate(hour=ExtractHour('booking_date')).values('hour').annotate(count=Count('id')).order_by('-count')
-
     # Get peak days
     peak_days = Booking.objects.annotate(day=ExtractWeekDay('booking_date')).values('day').annotate(count=Count('id')).order_by('-count')
 
@@ -257,7 +254,6 @@ def all_bookings(request):
 
     context = {
         'popular_routes': list(popular_routes),
-        'peak_hours': list(peak_hours),
         'peak_days': list(peak_days),
         'peak_months': list(peak_months),
         'bookings': bookings

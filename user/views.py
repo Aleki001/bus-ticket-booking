@@ -38,7 +38,7 @@ def login_view(request):
                 login(request, user)
                 return redirect('user_account')
         else:
-            return render(request, 'busapp/auth/login.html', {'error': 'Invalid credentials!! Try again.'})
+            return render(request, 'user/login.html', {'error': 'Invalid credentials!! Try again.'})
     else:
         return render(request, 'user/login.html')
  
