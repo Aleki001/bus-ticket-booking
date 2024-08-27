@@ -36,7 +36,6 @@ def login_view(request):
         if user is not None:
             if user.is_staff:
                 login(request, user)
-                print(user.is_staff)
                 return redirect('admin_account')
             else:
                 login(request, user)
@@ -144,6 +143,7 @@ def user_account(request):
 @login_required
 def admin_account(request):
     recent_bookings = Booking.objects.order_by('-booking_date')[:5]
+    recent_users = User.objects.all().order_by('date_joined')[:5]
     total_bookings = Booking.objects.all().count()
     total_users = User.objects.all().count()
 
@@ -169,6 +169,7 @@ def admin_account(request):
         'bookings': recent_bookings,
         'total_bookings': total_bookings,
         'total_users': total_users,
+        'recent_users': recent_users,
         'weeks': weeks,
         'booking_counts': booking_counts,
         'status_labels': status_labels,
