@@ -8,8 +8,8 @@ urlpatterns = [
     # booking urls
     path('book/customer-info/', views.customer_info, name='customer_info'),
     path('booking-confirmation/<int:booking_id>/', views.booking_confirmation, name='booking_confirmation'),
-    path('daraja/stk_push', views.stk_push_callback, name="stk_push_callback"),
     path('booking/pay', views.pay, name="confirm_payment"),
+    path('mpesa/callback/', views.callback, name="mpesa-callback"),
     path('bookings', views.all_bookings, name="bookings"),
     path('user-bookings', views.user_bookings, name="user_bookings"),
     # routes urls

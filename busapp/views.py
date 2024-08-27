@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
-from .models import Bus, Booking, Route
+from .models import Bus, Booking, Route, Payment
 from .forms import CustomerInfoForm, BusSearchForm, RoutesForm, BusForm
 from django.urls import reverse
 from urllib.parse import urlencode
@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django_daraja.mpesa.core import MpesaClient
 from django.views.decorators.csrf import csrf_exempt
+import datetime
+import json
 
 from django.db import IntegrityError
 
@@ -84,23 +86,22 @@ def customer_info(request):
 
     return render(request, 'busapp/booking/customer_info.html', {'form': form})
 
-
 @transaction.atomic
 def create_booking(request, customer_data):
     bus_id = request.session.get('bus_id')
     if not bus_id:
         messages.error(request, 'Bus selection is missing. Please select a bus first.')
         return redirect('index')
-    
+
     route_id = request.session.get('route_id')
     route = get_object_or_404(Route, id=route_id)
 
     bus = get_object_or_404(Bus, id=bus_id)
-    
+
     if bus.available_seats <= 0:
         messages.error(request, 'Sorry, the bus is fully booked.')
         return redirect('route_selection')
-    
+
     try:
         booking = Booking.objects.create(
             bus=bus,
@@ -108,23 +109,26 @@ def create_booking(request, customer_data):
             customer_name=customer_data.get('full_name'),
             customer_email=customer_data.get('email'),
             customer_phone=customer_data.get('phone_number'),
-            customer_id_number=customer_data.get('id_number')
+            customer_id_number=customer_data.get('id_number'),
+            status='Pending'  # Set initial status as 'Pending'
         )
 
-        # Add price in a session for payment purposes
+        # Store booking_id and other necessary information in the session
+        request.session['booking_id'] = booking.id
         request.session['price'] = bus.route.price
         request.session['phone_no'] = customer_data.get('phone_number')
-        
+
         return redirect('booking_confirmation', booking_id=booking.id)
-    
+
     except IntegrityError as e:
         messages.error(request, 'Please complete your profile with all required information.')
-        return redirect('user_account')  
-    
+        return redirect('user_account')
 
 def booking_confirmation(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     return render(request, 'busapp/booking/booking_confirmation.html', {'booking': booking})
+
+
 
 
 @csrf_exempt
@@ -132,7 +136,15 @@ def pay(request):
     if request.method == 'POST':
         phone_no = request.session.get('phone_no')
         amount = request.session.get('price')
-        
+
+        # Retrieve the booking using the session's stored booking_id
+        booking_id = request.session.get('booking_id')
+        if not booking_id:
+            messages.error(request, "Booking ID is missing. Please start the booking process again.")
+            return redirect('index')
+
+        booking = get_object_or_404(Booking, id=booking_id)
+
         cl = MpesaClient()
 
         phone_number = phone_no
@@ -146,31 +158,95 @@ def pay(request):
 
             # Accessing response attributes correctly
             if data['ResponseCode'] == '0':
+                # Store checkout_request_id in the booking
+                checkout_request_id = data['CheckoutRequestID']
+                booking.checkout_request_id = checkout_request_id
+                booking.save()
+
                 messages.success(request, "An STK Push was sent to your phone, confirm to complete the payment. Thank you :)")
             else:
                 messages.error(request, f"Payment failed: {data['ResponseDescription']}")
+                booking.status = 'Cancelled'
+                booking.save()
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
+            booking.status = 'Cancelled'
+            booking.save()
 
-        bus_id = request.session.get('bus_id')
-        bus = get_object_or_404(Bus, id=bus_id)
-    
+        # Update bus availability
+        bus = booking.bus
         bus.available_seats -= 1
         if bus.available_seats == 0:
             bus.status = 'BOOKED'
-    
         bus.save()
 
         return redirect('index')
     else:
         amount = request.session.get('price')
-        return render(request, 'busapp/booking/payment.html', {'price':amount})
+        return render(request, 'busapp/booking/payment.html', {'price': amount})
 
 
-def stk_push_callback(request):
-    data = request.body
+@csrf_exempt
+def callback(request):
+    if request.method == 'POST':
+        
+        # Load the JSON data from the request
+        result_json = json.loads(request.body.decode('utf-8'))
+        
+        # Extract the necessary fields from the callback
+        stk_callback = result_json.get('Body', {}).get('stkCallback', {})
+        result_code = stk_callback.get('ResultCode')
+        result_desc = stk_callback.get('ResultDesc')
+        merchant_request_id = stk_callback.get('MerchantRequestID')
+        checkout_request_id = stk_callback.get('CheckoutRequestID')
+        
+        # Initialize variables
+        amount = None
+        mpesa_receipt_number = None
+        balance = None
+        transaction_date = None
+        phone_number = None
+        
+        # Extract CallbackMetadata Items
+        callback_metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
+        for item in callback_metadata:
+            if item['Name'] == 'Amount':
+                amount = item['Value']
+            elif item['Name'] == 'MpesaReceiptNumber':
+                mpesa_receipt_number = item['Value']
+            elif item['Name'] == 'Balance':
+                balance = item.get('Value', None)
+            elif item['Name'] == 'TransactionDate':
+                transaction_date = datetime.strptime(str(item['Value']), "%Y%m%d%H%M%S")
+            elif item['Name'] == 'PhoneNumber':
+                phone_number = item['Value']
+        
+        # Save the data to the database
+        payment = Payment.objects.create(
+            merchant_request_id=merchant_request_id,
+            checkout_request_id=checkout_request_id,
+            result_code=result_code,
+            result_description=result_desc,
+            amount=amount,
+            mpesa_receipt_number=mpesa_receipt_number,
+            balance=balance,
+            transaction_date=transaction_date,
+            phone_number=phone_number
+        )
 
-    return HttpResponse(data)
+        # Prepare the JSON response
+        response_data = {
+            "ResultCode": "0",
+            "ResultDesc": "Success"
+        }
+        response_json = json.dumps(response_data)
+
+        # Return the JSON response
+        return HttpResponse(response_json, content_type='application/json')
+
+    return HttpResponse('Method is not allowed', status=405)
+
+
 
 @login_required
 def routes(request):
