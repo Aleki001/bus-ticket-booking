@@ -180,29 +180,63 @@ $(document).ready(function() {
         }
     };
 
-    // Popular Routes
-    const popularRoutesCtx = document.getElementById('popularRoutesChart').getContext('2d');
-    const popularRoutesData = {{ popular_routes|safe }};
-    new Chart(popularRoutesCtx, {
-        ...chartConfig,
-        data: {
-            labels: extractData(popularRoutesData, 'route__starting_point'),
-            datasets: [{
-                label: 'Bookings',
-                data: extractData(popularRoutesData, 'count'),
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            ...chartConfig.options,
-            scales: {
-                x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Routes (starting point)' }},
-                y: chartConfig.options.scales.y
-            }
+    // // Popular Routes
+    // const popularRoutesCtx = document.getElementById('popularRoutesChart').getContext('2d');
+    // const popularRoutesData = {{ popular_routes|safe }};
+    // new Chart(popularRoutesCtx, {
+    //     ...chartConfig,
+    //     data: {
+    //         labels: extractData(popularRoutesData, 'route__starting_point'),
+    //         datasets: [{
+    //             label: 'Bookings',
+    //             data: extractData(popularRoutesData, 'count'),
+    //             backgroundColor: 'rgba(75, 192, 192, 0.6)',
+    //             borderColor: 'rgba(75, 192, 192, 1)',
+    //             borderWidth: 2
+    //         }]
+    //     },
+    //     options: {
+    //         ...chartConfig.options,
+    //         scales: {
+    //             x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Routes (starting point)' }},
+    //             y: chartConfig.options.scales.y
+    //         }
+    //     }
+    // });
+        // Popular Routes
+        const popularRoutesCtx = document.getElementById('popularRoutesChart').getContext('2d');
+        const popularRoutesData = {{ popular_routes|safe }};
+
+        // Helper function to extract combined route names
+        function extractRouteNames(data) {
+            return data.map(item => `${item.route__starting_point} - ${item.route__destination}`);
         }
-    });
+
+        new Chart(popularRoutesCtx, {
+            ...chartConfig,
+            data: {
+                labels: extractRouteNames(popularRoutesData), // Use combined route names
+                datasets: [{
+                    label: 'Bookings',
+                    data: extractData(popularRoutesData, 'count'),
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                ...chartConfig.options,
+                scales: {
+                    x: { ...chartConfig.options.scales.x, title: { display: true, text: 'Routes' }},
+                    y: chartConfig.options.scales.y
+                }
+            }
+        });
+
+
+
+
+
 
     // Peak Days
     const peakDaysCtx = document.getElementById('peakDaysChart').getContext('2d');

@@ -37,6 +37,7 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class UserRegisterForm(UserCreationForm):
+    usable_password = None
     email = forms.EmailField()
 
     class Meta:

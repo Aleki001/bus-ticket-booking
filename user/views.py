@@ -104,7 +104,7 @@ def admin_profile(request):
                 profile.save()
             form.save()
             messages.success(request, 'Your profile was successfully updated!')
-            return redirect('admin_account')
+            return redirect('admin_profile')
         else:
             messages.error(request, 'Please correct the error below.')
     else:
